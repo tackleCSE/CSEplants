@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>California Plants Matching Game</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            overflow: hidden;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        h1 {
+            color: #2e7d32;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #558b2f;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        .instructions {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .plants-row {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        
+        .plant-item {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            width: 220px;
+            flex-shrink: 0;
+        }
+        
+        .plant-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        .plant-images {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 15px;
+        }
+        
+        .plant-image {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .drop-zone {
+            min-height: 60px;
+            border: 2px dashed #8bc34a;
+            border-radius: 8px;
+            margin: 10px 15px 15px;
+            padding: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f1f8e9;
+            transition: all 0.3s ease;
+        }
+        
+        .drop-zone.highlight {
+            background: #dcedc8;
+            border-color: #689f38;
+        }
+        
+        .names-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .plant-name {
+            padding: 10px 18px;
+            background: #689f38;
+            color: white;
+            border-radius: 25px;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+        
+        .plant-name:hover {
+            background: #558b2f;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .plant-name:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+        
+        .plant-name.dragging {
+            opacity: 0.7;
+        }
+        
+        .plant-name.placed {
+            background: #388e3c;
+            cursor: pointer;
+        }
+        
+        .plant-name.wrong {
+            background: #d32f2f;
+        }
+        
+        .feedback-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .feedback {
+            text-align: center;
+            font-weight: bold;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        .correct {
+            color: #2e7d32;
+            background: #e8f5e9;
+            border: 2px solid #a5d6a7;
+        }
+        
+        .incorrect {
+            color: #c62828;
+            background: #ffebee;
+            border: 2px solid #ef9a9a;
+        }
+        
+        .score-display {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #689f38;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .game-button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+        }
+        
+        .check-button {
+            background: #689f38;
+            color: white;
+        }
+        
+        .check-button:hover {
+            background: #558b2f;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .reset-button {
+            background: #0288d1;
+            color: white;
+        }
+        
+        .reset-button:hover {
+            background: #0277bd;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        @media (max-width: 1200px) {
+            .plants-row {
+                justify-content: flex-start;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .plant-item {
+                width: 180px;
+            }
+            
+            .plant-image {
+                height: 100px;
+            }
+            
+            .button-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .game-button {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>California Plants Matching Game</h1>
+            <p class="subtitle">Match each plant name to its pair of images</p>
+        </header>
+        
+        <div class="instructions">
+            <p>Drag the plant names to the drop zones below the correct images. Click on placed names to remove them.</p>
+        </div>
+        
+        <div class="game-area">
+            <div class="plants-row" id="plants-row"></div>
+            
+            <div class="names-container" id="names-container"></div>
+            
+            <div class="feedback-area">
+                <div class="feedback" id="feedback"></div>
+                <div class="score-display" id="score-display"></div>
+                
+                <div class="button-container">
+                    <button class="game-button check-button" onclick="checkAnswers()">Check Answers</button>
+                    <button class="game-button reset-button" onclick="resetGame()">New Plants</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Plant data - 67 species
+        const plants = [
+            {
+                name: "Cassia leptophylla",
+                images: [
+                    "https://pacifichorticulture.org/wp-content/uploads/2006/10/Bri1_FIX.jpg",
+                    "https://plantmaster.com/PlantMaster/FullSize/25212a.jpg"
+                ]
+            },
+            {
+                name: "Fraxinus dipetala",
+                images: [
+                    "https://plantmaster.com/PlantMaster/FullSize/2471a.jpg",
+                    "https://www.calfloranursery.com/sites/default/files/styles/plant_detail_custom_user_wide_1x/public/img_2795.jpg?itok=2ztVaA6s"
+                ]
+            },
+            {
+                name: "Platanus racemosa",
+                images: [
+                    "https://www.fresnogardening.org/PlantMaster/Photos/24198a.jpg",
+                    "https://landscapeplants.oregonstate.edu/sites/plantid7/files/plantimage/plrac56.jpg"
+                ]
+            },
+            {
+                name: "Acer macrophyllum",
+                images: [
+                    "https://landscapeplants.oregonstate.edu/sites/plantid7/files/plantimage/acma493A.jpg",
+                    "https://www.treesandshrubsonline.org/site/assets/files/4059/acer-macrophyllum-11.jpg"
+                ]
+            },
+            {
+                name: "Gleditsia triacanthos inermis",
+                images: [
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2017/01/11141421/Gleditsia-triacanthos-var.-inermis-Sunburst-8.jpg",
+                    "https://www.gardenia.net/wp-content/uploads/2023/04/V3x4uNTp6ZHfT4RD3uolCuaoip2bLILxeMRkZzcG-780x520.webp"
+                ]
+            },
+            {
+                name: "Populus fremontii",
+                images: [
+                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQK9hohTDYY3CWdQQoNXVFhvRFi6oFlpcW6Iw&s",
+                    "https://landscapeplants.oregonstate.edu/sites/plantid7/files/plantimage/pofre3359.jpg"
+                ]
+            },
+            {
+                name: "Quercus engelmannii",
+                images: [
+                    "https://plantmaster.com/PlantMaster/FullSize/26010h.jpg",
+                    "https://landscapeplants.oregonstate.edu/sites/plantid7/files/plantimage/queng8321.jpg"
+                ]
+            },
+            {
+                name: "Quercus kelloggii",
+                images: [
+                    "https://trees.stanford.edu/images/Quercus/QUEkel-bonair.jpg",
+                    "https://landscapeplants.oregonstate.edu/sites/plantid7/files/plantimage/quke88.jpg"
+                ]
+            },
+            {
+                name: "Arctostaphylos 'Dr. Hurd'",
+                images: [
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2017/03/16102534/Arctostaphylos-manzanita-Dr.-Hurd-SB-6.jpg",
+                    "https://www.laspilitas.com/images/grid24_18/11641/images/plants/56/arctostaphylos_dr_hurd_manzanita.jpg"
+                ]
+            },
+            {
+                name: "Juglans californica",
+                images: [
+                    "https://images.squarespace-cdn.com/content/v1/5f5fd3e2d3e28f131e3b2caa/1696531341188-50IS1LARSGM0D1E2YWBY/juglans_californica.png",
+                    "https://www.calflora.org/app/up/cbo/75/22794.jpg"
+                ]
+            },
+            {
+                name: "Olea europaea",
+                images: [
+                    "https://landscapeplants.oregonstate.edu/sites/plantid7/files/plantimage/oleur4749B.jpg",
+                    "https://www.cal-ipc.org/wp-content/uploads/2017/10/Olea-europaea_Olive_JM-DiTomaso.jpg"
+                ]
+            },
+            {
+                name: "Cercis occidentalis",
+                images: [
+                    "https://www.garden-view.com/wp-content/uploads/western-redbud-tree.jpg",
+                    "https://www.livingwild.org/livingwild/wp-content/uploads/2013/03/20120503_0016redbudleaves_crop.jpg"
+                ]
+            },
+            {
+                name: "Aristolochia californica",
+                images: [
+                    "https://plantmaster.com/PlantMaster/FullSize/25090c.jpg",
+                    "https://sacvalleycnps.org/wp-content/uploads/2021/05/Aristolochia_californica.jpg"
+                ]
+            },
+            {
+                name: "Campsis radicans",
+                images: [
+                    "https://landscapeplants.oregonstate.edu/sites/plantid7/files/plantimage/cara4024B.jpg",
+                    "https://www.jerseyyards.org/wp-content/uploads/2020/04/Campsis-radicans-d.jpg"
+                ]
+            },
+            {
+                name: "Clematis lasiantha",
+                images: [
+                    "https://www.calflora.org/app/up/entry/298/89622.jpg",
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2017/06/Clematis-lasiantha-6-of-7.jpg"
+                ]
+            },
+            {
+                name: "Lonicera hispidula",
+                images: [
+                    "https://landscapeplants.oregonstate.edu/sites/plantid7/files/plantimage/lohis1435A.jpg",
+                    "https://calphotos.berkeley.edu/imgs/512x768/0000_0000/1107/1188.jpeg"
+                ]
+            },
+            {
+                name: "Tecoma capensis",
+                images: [
+                    "https://www.gardenia.net/wp-content/uploads/2025/12/Tecomaria-capensis-the-Cape-honeysuckle.jpg",
+                    "https://www.gardenia.net/wp-content/uploads/2025/12/Tecomaria-capensis-the-Cape-honeysuckle3.jpg"
+                ]
+            },
+            {
+                name: "Aquilegia Formosa",
+                images: [
+                    "https://mikeputnamphoto.com/wp-content/uploads/2019/02/Western-Columbine-Aquilegia-formosa.jpg",
+                    "https://www.fs.usda.gov/wildflowers/plant-of-the-week/images/westerncolumbine/western-columbine_rf.jpg"
+                ]
+            },
+            {
+                name: "Asclepias fascicularis",
+                images: [
+                    "https://plantmaster.com/PlantMaster/FullSize/132b.jpg",
+                    "https://www.rogersgardens.com/cdn/shop/products/MilkWeed_Product.jpg?v=1690396764"
+                ]
+            },
+            {
+                name: "Cynara cardunculus var. scolymus",
+                images: [
+                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ67wZpAVKV4duloUxPT-7SizISwaaESc4FxQ&s",
+                    "https://www.cal-ipc.org/wp-content/uploads/2017/10/Cynara-cardunculus_artichoke-starthistle_JM-DiTomaso.jpg"
+                ]
+            },
+            {
+                name: "Dichelostemma capitatum",
+                images: [
+                    "https://southwestdesertflora.com/WebsiteFolders/Images/Liliaceae/Dichelostemma%20capitatum,%20Bluedick/4540Dichelostemma-capitatum,-Bluedicks700x464.jpg",
+                    "https://www.gardenia.net/wp-content/uploads/2023/04/AFKsVCuFg6eM3HSzO67NwrZN2WcYNHn8rjiOksm6-780x520.webp"
+                ]
+            },
+            {
+                name: "Heuchera 'Canyon Duet'",
+                images: [
+                    "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgLerLvd1uMX-4GnfO-mbVqc_Cf33-we_PVVOJZWnWxnwi9Bdw679koDjFF-K8cndYTSe_OJJ2_WRWKWQnALTNw0YGXhFmumrqyFSOhBSuHV8SkxhalQ2hG2Qk5LJsHv8dAoZGtGoafX1-n7v-HvyXRk_iBXf98z5mlEcnWVBEihhdFd1blR3m_8u1C/s1000/8701286554_e906681ef2_k.jpg",
+                    "https://i0.wp.com/www.lindavistanatives.com/wp-content/uploads/2024/06/HEUCH-CNYN-DUET-1.jpg?fit=2400%2C1800&ssl=1"
+                ]
+            },
+            {
+                name: "Iris douglasiana",
+                images: [
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2017/01/04134804/Iris-douglasiana-2.jpg",
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2017/01/04134719/Iris-douglasiana-2-2.jpg"
+                ]
+            },
+            {
+                name: "Lepechinia fragrans",
+                images: [
+                    "https://plantmaster.com/PlantMaster/FullSize/2733b.jpg",
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2017/07/Lepechinia-fragrans-3-of-3.jpg"
+                ]
+            },
+            {
+                name: "Lupinus albifrons",
+                images: [
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2017/02/15120424/Lupinus-albifrons-2.jpg",
+                    "https://www.calfloranursery.com/sites/default/files/styles/plant_detail_custom_user_wide_1x/public/20200411_175404.jpg?itok=JNWp5uW4"
+                ]
+            },
+            {
+                name: "Mimulus guttatus",
+                images: [
+                    "https://plantmaster.com/PlantMaster/FullSize/4295a.jpg",
+                    "https://www.gardenia.net/wp-content/uploads/2023/05/mimulus-guttatus.webp"
+                ]
+            },
+            {
+                name: "Monardella odoratissima",
+                images: [
+                    "https://www.gardenia.net/wp-content/uploads/2023/05/monardella-odoratissima.webp",
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2017/06/Monardella-odoratissima-2-of-4.jpg"
+                ]
+            },
+            {
+                name: "Rhododendron occidentale",
+                images: [
+                    "https://landscapeplants.oregonstate.edu/sites/plantid7/files/plantimage/rhoc30.jpg",
+                    "https://landscapeplants.oregonstate.edu/sites/plantid7/files/plantimage/rhoc1179.jpg"
+                ]
+            },
+            {
+                name: "Ribes malvaceum",
+                images: [
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2017/06/Ribes-malvaceum-2-of-3.jpg",
+                    "https://xeraplants.com/wp-content/uploads/2018/01/Image-7-14-22-at-1.59-AM.jpeg"
+                ]
+            },
+            {
+                name: "Rosa californica",
+                images: [
+                    "https://plantmaster.com/PlantMaster/FullSize/26078a.jpg",
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2017/01/04134241/Rosa-californica-2.jpg"
+                ]
+            },
+            {
+                name: "Rosmarinus officinalis",
+                images: [
+                    "https://landscapeplants.oregonstate.edu/sites/plantid7/files/plantimage/roof388A.jpg",
+                    "https://westernstarnurseries.com/wp-content/uploads/2021/03/Rosmarinus-officinalis-Prostrata-Creeping-Rosemary-scaled.jpg"
+                ]
+            },
+            {
+                name: "Salvia 'Pozo Blue'",
+                images: [
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2017/06/Salvia-Pozo-Blue-2-of-3.jpg",
+                    "https://calscape.org/storage/app/uploads/public/662/300/94c/66230094ce624391394834.jpg"
+                ]
+            },
+            {
+                name: "Spiraea douglasii",
+                images: [
+                    "https://landscapeplants.oregonstate.edu/sites/plantid7/files/plantimage/spdoug930A.jpg",
+                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGopfA320oUDfFueA-R9Ge0iTJc1s10A-x6w&s"
+                ]
+            },
+            {
+                name: "Woodwardia fimbriata",
+                images: [
+                    "https://plantmaster.com/PlantMaster/FullSize/639a.jpg",
+                    "https://www.calfloranursery.com/sites/default/files/styles/plant_detail_custom_user_wide_1x/public/woodwardfim2.jpg?itok=TvZfdMlf"
+                ]
+            },
+            {
+                name: "Achillea millefolium lanulosa",
+                images: [
+                    "https://www.laspilitas.com/images/grid24_18/11972/images/plants/achillea-lanulosa.jpg",
+                    "https://newfs.s3.amazonaws.com/taxon-images-1000s1000/Asteraceae/achillea-millefolium-lanulosa-ha-ahaines-a.jpg"
+                ]
+            },
+            {
+                name: "Adenostoma fasciculatum var. prostratum",
+                images: [
+                    "https://www.calfloranursery.com/sites/default/files/styles/plant_detail_custom_user_wide_1x/public/adenostema-fasciculatum-var-prostratum.jpg?itok=HbbH5iOJ",
+                    "https://calscape.org/storage/app/ExtData/allimages/Photos/Adenostoma_fasciculatum_image25.jpg"
+                ]
+            },
+            {
+                name: "Arctostaphylos 'Emerald Carpet'",
+                images: [
+                    "https://plantmaster.com/PlantMaster/FullSize/24321a.jpg",
+                    "https://www.laspilitas.com/images/grid24_24/3456/s/images/plants/773/arctostaphylos_emerald_carpet.jpg"
+                ]
+            },
+            {
+                name: "Baccharis pilularis 'Pigeon Point'",
+                images: [
+                    "https://plantmaster.com/PlantMaster/FullSize/1960d.jpg",
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2016/12/15103242/Baccharis-pilularis-Pigeon-Point-2-of-3.jpg"
+                ]
+            },
+            {
+                name: "Dichondra occidentalis",
+                images: [
+                    "https://www.laspilitas.com/images/grid24_24/2967/s/images/plants/870/dichondra_occidentalis.jpg",
+                    "https://storage.googleapis.com/wildflowersearchv11.appspot.com/img/Dichondra_occidentalis.jpg"
+                ]
+            },
+            {
+                name: "Fragaria californica",
+                images: [
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2017/06/Fragaria-californica-2-of-3.jpg",
+                    "https://www.laspilitas.com/images/grid24_24/249/s/images/plants/311/fragaria_californica-2.jpg"
+                ]
+            },
+            {
+                name: "Montia perifoliata",
+                images: [
+                    "https://www.laspilitas.com/images/grid24_24/6445/s/images/plants/1004/montia_perifoliata-1.jpg",
+                    "https://www.laspilitas.com/images/grid24_12/3476/s/images/plants/736/monardella_hypoleuca_ssp_lanata.jpg"
+                ]
+            },
+            {
+                name: "Teucrium chamaedrys 'Prostratum'",
+                images: [
+                    "https://mswn.com/wp-content/uploads/2018/06/Teucrium-chamedrys-Prostratum-2.jpg",
+                    "https://cdn11.bigcommerce.com/s-x68mczjd0x/images/stencil/1280x1280/products/1581/4373/P1012023__54138.1680810550.JPG?c=2"
+                ]
+            },
+            {
+                name: "Adiantum capillus-veneris",
+                images: [
+                    "https://www.calfloranursery.com/sites/default/files/styles/plant_detail_custom_user_wide_1x/public/dsc01034.jpg?itok=MLUC3TL8",
+                    "https://www.picturethisai.com/wiki-image/1080/153977893318295562.jpeg"
+                ]
+            },
+            {
+                name: "Asarum caudatum",
+                images: [
+                    "https://images.squarespace-cdn.com/content/v1/61f1bd75062cff2f00133bbc/178fe286-7a51-4235-b0d8-1a1267186dda/wild-ginger+leaves.jpg",
+                    "https://upload.wikimedia.org/wikipedia/commons/6/6d/Asarum_caudatum_10993.JPG"
+                ]
+            },
+            {
+                name: "Calochortus spp.",
+                images: [
+                    "https://www.calfloranursery.com/sites/default/files/styles/plant_detail_custom_user_wide_1x/public/frontyard1.jpg?itok=0upOLNaN",
+                    "https://www.pacifichorticulture.org/wp-content/uploads/Pitschel.Renz_.C.tolmiei-scaled.jpg"
+                ]
+            },
+            {
+                name: "Echinacea purpurea",
+                images: [
+                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRSvf3_1Xj5DnvPgRNmk5A_wketEeK7zTQJvQ&s",
+                    "https://www.allendanseed.com/media/products/Purple_Cone_5B82226F15BB1.jpg"
+                ]
+            },
+            {
+                name: "Epipactis gigantea",
+                images: [
+                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQScg3sY6QqUncc-VBW8qH5kO2XCjFlSfV-1Q&s",
+                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRmrWRQH1sZnJ4KTTxXgaZNzETcIn5ZbJLDHQ&s"
+                ]
+            },
+            {
+                name: "Juncus patens",
+                images: [
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2017/01/04134535/Juncus-patens-2.jpg",
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2017/01/04134519/Juncus-patens.jpg"
+                ]
+            },
+            {
+                name: "Lilium pardalinum",
+                images: [
+                    "https://www.gardenia.net/wp-content/uploads/2023/05/lilium-pardalinum.webp",
+                    "https://i0.wp.com/www.lindavistanatives.com/wp-content/uploads/2019/06/LIL-PARDAL-1.jpg?fit=2400%2C1800&ssl=1"
+                ]
+            },
+            {
+                name: "Penstemon heterophyllus var. australis",
+                images: [
+                    "https://www.laspilitas.com/images/grid24_24/8500/pictures/penstemon_heterophyllus.jpg",
+                    "https://store.theodorepayne.org/cdn/shop/files/penhetaus-01.jpg?v=1689193152"
+                ]
+            },
+            {
+                name: "Pycnanthemum californicum",
+                images: [
+                    "https://i0.wp.com/www.lindavistanatives.com/wp-content/uploads/2022/09/PYCNANTH-CAL-1.jpg?fit=900%2C641&ssl=1",
+                    "https://www.laspilitas.com/images/grid24_24/5975/s/images/plants/855/pycnanthemum_californicum.jpg"
+                ]
+            },
+            {
+                name: "Triteleia laxa",
+                images: [
+                    "https://www.calfloranursery.com/sites/default/files/styles/plant_detail_custom_user_wide_1x/public/triteleialaxa_queenfabiola_june23_2023_0003_0.jpg?itok=kUZmMQWT",
+                    "https://www.gardenia.net/wp-content/uploads/2023/05/triteleia-laxa-Queen-Fabiola.webp"
+                ]
+            },
+            {
+                name: "Bouteloua gracilis 'Blonde Ambition'",
+                images: [
+                    "https://plantmaster.com/gardens/userimages/member640/FullSize/66936_2fd90439.jpg",
+                    "https://i0.wp.com/www.lindavistanatives.com/wp-content/uploads/2019/06/BOUTEL-GRAC-BLND-AMB-1.jpg?fit=2400%2C1800&ssl=1"
+                ]
+            },
+            {
+                name: "Dianella caerulea",
+                images: [
+                    "https://plantmaster.com/PlantMaster/FullSize/2173a.jpg",
+                    "https://localbotanist.com.au/wp-content/uploads/2024/06/DIAEA140.jpg"
+                ]
+            },
+            {
+                name: "Festuca glauca",
+                images: [
+                    "https://cdn11.bigcommerce.com/s-4ul1rui7xg/images/stencil/1280x1280/products/1011/2697/festuca_elijah_blue_03__47594.1677007660.jpg?c=2",
+                    "https://www.gardenia.net/wp-content/uploads/2023/05/festuca-glauca-Blaufuchs-blue-fescue.webp"
+                ]
+            },
+            {
+                name: "Muhlenbergia rigens",
+                images: [
+                    "https://www.gardenia.net/wp-content/uploads/2023/04/DP7TVsVWizynkXIyscHVYHQ5cAHNkY5bJ3TTTN4Z-780x520.webp",
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2016/11/29133142/Muhlenbergia-rigens-6.jpg"
+                ]
+            },
+            {
+                name: "Berberis 'Ken Hartman' Hybrid",
+                images: [
+                    "https://plantmaster.com/PlantMaster/FullSize/25137a.jpg",
+                    "https://plantmaster.com/PlantMaster/Photos/25137b.jpg"
+                ]
+            },
+            {
+                name: "Ceanothus 'Joyce Coulter'",
+                images: [
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2017/02/01120555/Ceanothus-Joyce-Coulter-3.jpg",
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2017/02/01120542/Ceanothus-Joyce-Coulter-21.jpg"
+                ]
+            },
+            {
+                name: "Cupressus abramsiana",
+                images: [
+                    "https://landscapeplants.oregonstate.edu/sites/plantid7/files/plantimage/cuabr4025A.jpg",
+                    "https://cff2.earth.com/uploads/2017/01/03143231/Cupressus-abramsiana.jpg"
+                ]
+            },
+            {
+                name: "Garrya elliptica 'James Roof'",
+                images: [
+                    "https://i0.wp.com/thomasdstone.blog/wp-content/uploads/2018/02/img_1900.jpg?resize=1000%2C750&ssl=1",
+                    "https://landscapeplants.oregonstate.edu/sites/plantid7/files/plantimage/gaelljr5493A.jpg"
+                ]
+            },
+            {
+                name: "Heteromeles arbutifolia",
+                images: [
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2016/12/06120202/Heteromeles-arbutifolia-5.jpg",
+                    "https://waterwisegardenplanner.org/wp-content/uploads/2016/12/06120152/Heteromeles-arbutifolia-4.jpg"
+                ]
+            },
+            {
+                name: "Mahonia pinnata",
+                images: [
+                    "https://plantmaster.com/PlantMaster/FullSize/25137a.jpg",
+                    "https://www.gardenia.net/wp-content/uploads/2023/05/berberis-pinnata-780x520.webp"
+                ]
+            },
+            {
+                name: "Philadelphus lewisii",
+                images: [
+                    "https://www.gardenia.net/wp-content/uploads/2023/04/JExSZCq7Fc4Yf4gb91dPGqDRHxpPw3yUiCULe5hM-780x520.webp",
+                    "https://www.gardenia.net/wp-content/uploads/2023/05/philadelphus-lewisii.webp"
+                ]
+            },
+            {
+                name: "Rhamnus californica",
+                images: [
+                    "https://www.calfloranursery.com/sites/default/files/styles/plant_detail_custom_user_wide_1x/public/rhamnus-californica-salt-point-coffeeberry.jpg?itok=DwAAVs2g",
+                    "https://calphotos.berkeley.edu/imgs/512x768/0000_0000/1207/0592.jpeg"
+                ]
+            },
+            {
+                name: "Aloe marlothii",
+                images: [
+                    "https://www.gardenia.net/wp-content/uploads/2023/05/Aloe-marlothii-Mountain-Aloe.webp",
+                    "https://heronsheadnursery.com/cdn/shop/files/48206DAA-9AF3-49BF-A33F-8A66EBD02D06.jpg?v=1725509866"
+                ]
+            },
+            {
+                name: "Yucca recurvifolia",
+                images: [
+                    "https://plantmaster.com/PlantMaster/FullSize/643c.jpg",
+                    "https://www.onlineplantguide.com/Image%20Library/Y/8401.jpg"
+                ]
+            },
+            {
+                name: "Festuca californica",
+                images: [
+                    "https://www.laspilitas.com/images/grid24_24/12342/images/plants/festuca-californica.jpg",
+                    "https://www.calfloranursery.com/sites/default/files/styles/plant_detail_custom_user_wide_1x/public/festuca_c._scott_mt.jpg?itok=mjbKdBtl"
+                ]
+            },
+            {
+                name: "Nassella pulchra",
+                images: [
+                    "https://www.gardenia.net/wp-content/uploads/2023/05/nassella-pulchra.webp",
+                    "https://theodorepayne.org/nativeplantdatabase/images/thumb/Nassela_pulchra_03.JPG/300px-Nassela_pulchra_03.JPG"
+                ]
+            },
+            {
+                name: "Sesleria autumnalis",
+                images: [
+                    "https://s3.us-east-2.amazonaws.com/wpoffload.photos.hortech.com/wp-content/uploads/2025/04/22121929/725384010604.jpg",
+                    "https://cdn11.bigcommerce.com/s-ifhig5mh0a/products/4415/images/3303/media__96867.1678813128.386.513.jpg?c=1"
+                ]
+            }
+        ];
+
+        // Game state
+        let selectedPlants = [];
+        let correctAnswers = {};
+        let score = 0;
+        let attempts = 0;
+        let originalNameElements = {};
+        
+        // Initialize the game
+        function initGame() {
+            // Clear previous state
+            document.getElementById('plants-row').innerHTML = '';
+            document.getElementById('names-container').innerHTML = '';
+            document.getElementById('feedback').innerHTML = '';
+            document.getElementById('feedback').className = 'feedback';
+            originalNameElements = {};
+            
+            // Select 5 random plants
+            const shuffled = [...plants].sort(() => 0.5 - Math.random());
+            selectedPlants = shuffled.slice(0, 5);
+            correctAnswers = {};
+            
+            // Create plant items with two images each
+            const plantsRow = document.getElementById('plants-row');
+            
+            selectedPlants.forEach((plant, index) => {
+                const plantItem = document.createElement('div');
+                plantItem.className = 'plant-item';
+                plantItem.id = `plant-${index}`;
+                
+                const plantImages = document.createElement('div');
+                plantImages.className = 'plant-images';
+                
+                // First image (top)
+                const img1 = document.createElement('img');
+                img1.className = 'plant-image';
+                img1.src = plant.images[0];
+                img1.alt = `Plant ${index} image 1`;
+                plantImages.appendChild(img1);
+                
+                // Second image (bottom)
+                const img2 = document.createElement('img');
+                img2.className = 'plant-image';
+                img2.src = plant.images[1];
+                img2.alt = `Plant ${index} image 2`;
+                plantImages.appendChild(img2);
+                
+                // Drop zone
+                const dropZone = document.createElement('div');
+                dropZone.className = 'drop-zone';
+                dropZone.id = `drop-${index}`;
+                dropZone.setAttribute('data-plant', plant.name);
+                
+                // Add drag and drop event listeners
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('highlight');
+                });
+                
+                dropZone.addEventListener('dragleave', () => {
+                    dropZone.classList.remove('highlight');
+                });
+                
+                dropZone.addEventListener('drop', drop);
+                
+                plantItem.appendChild(plantImages);
+                plantItem.appendChild(dropZone);
+                plantsRow.appendChild(plantItem);
+                
+                // Store correct answer
+                correctAnswers[`drop-${index}`] = plant.name;
+            });
+            
+            // Create draggable name elements
+            const namesContainer = document.getElementById('names-container');
+            
+            // Shuffle the names
+            const names = selectedPlants.map(p => p.name);
+            names.sort(() => 0.5 - Math.random());
+            
+            names.forEach(name => {
+                const nameElement = document.createElement('div');
+                nameElement.className = 'plant-name';
+                nameElement.draggable = true;
+                const elementId = 'name-' + name.replace(/\s+/g, '-') + '-' + Math.random().toString(36).substr(2, 5);
+                nameElement.id = elementId;
+                nameElement.textContent = name;
+                
+                // Store original element reference
+                originalNameElements[elementId] = nameElement;
+                
+                // Add drag event listener
+                nameElement.addEventListener('dragstart', drag);
+                
+                // Add click event listener to return names
+                nameElement.addEventListener('click', returnNameToPool);
+                
+                namesContainer.appendChild(nameElement);
+            });
+            
+            // Update score display
+            updateScore();
+        }
+        
+        // Drag function
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+            ev.target.classList.add('dragging');
+        }
+        
+        // Drop function
+        function drop(ev) {
+            ev.preventDefault();
+            ev.target.classList.remove('highlight');
+            
+            const data = ev.dataTransfer.getData("text");
+            const draggedElement = document.getElementById(data);
+            
+            // Remove from previous drop zone if it was there
+            if (draggedElement.parentNode.classList.contains('drop-zone')) {
+                returnNameToPool({ target: draggedElement });
+            }
+            
+            // Clear the current drop zone
+            ev.target.innerHTML = '';
+            
+            // Create a new element (to prevent duplicate IDs)
+            const newElement = document.createElement('div');
+            newElement.className = 'plant-name placed';
+            newElement.textContent = draggedElement.textContent;
+            newElement.setAttribute('data-original-id', data);
+            
+            // Add click event to return name to pool
+            newElement.addEventListener('click', function() {
+                returnNameToPool({ target: this });
+            });
+            
+            // Add to drop zone
+            ev.target.appendChild(newElement);
+            
+            // Hide the original dragged element
+            draggedElement.style.display = 'none';
+            draggedElement.classList.remove('dragging');
+        }
+        
+        // Function to return name to pool
+        function returnNameToPool(e) {
+            const element = e.target;
+            const originalId = element.getAttribute('data-original-id') || element.id;
+            const originalElement = originalNameElements[originalId] || document.getElementById(originalId);
+            
+            if (originalElement) {
+                originalElement.style.display = 'block';
+                originalElement.classList.remove('wrong');
+            }
+            
+            // If this was a placed element, remove it from drop zone
+            if (element.parentNode.classList.contains('drop-zone')) {
+                element.parentNode.innerHTML = '';
+            }
+        }
+        
+        // Check answers
+        function checkAnswers() {
+            const feedback = document.getElementById('feedback');
+            let correctCount = 0;
+            
+            // Check each drop zone
+            selectedPlants.forEach((plant, index) => {
+                const dropZone = document.getElementById(`drop-${index}`);
+                if (dropZone.firstChild) {
+                    const isCorrect = dropZone.firstChild.textContent === correctAnswers[`drop-${index}`];
+                    if (isCorrect) {
+                        correctCount++;
+                        dropZone.firstChild.classList.remove('wrong');
+                        dropZone.firstChild.classList.add('placed');
+                    } else {
+                        dropZone.firstChild.classList.remove('placed');
+                        dropZone.firstChild.classList.add('wrong');
+                        
+                        // Show the original name element again so it can be reused
+                        const originalId = dropZone.firstChild.getAttribute('data-original-id');
+                        if (originalId && originalNameElements[originalId]) {
+                            originalNameElements[originalId].style.display = 'block';
+                        }
+                    }
+                }
+            });
+            
+            // Update attempts and score
+            attempts++;
+            if (correctCount === selectedPlants.length) {
+                score++;
+            }
+            updateScore();
+            
+            // Display feedback
+            if (correctCount === selectedPlants.length) {
+                feedback.textContent = 'Perfect! All answers are correct!';
+                feedback.className = 'feedback correct';
+            } else if (correctCount > 0) {
+                feedback.textContent = `You got ${correctCount} out of ${selectedPlants.length} correct. Try again!`;
+                feedback.className = 'feedback incorrect';
+            } else {
+                feedback.textContent = 'None correct. Try again!';
+                feedback.className = 'feedback incorrect';
+            }
+        }
+        
+        // Update score display
+        function updateScore() {
+            document.getElementById('score-display').textContent = `Score: ${score} correct out of ${attempts} attempts`;
+        }
+        
+        // Reset game
+        function resetGame() {
+            initGame();
+        }
+        
+        // Initialize on page load
+        window.onload = initGame;
+    </script>
+</body>
+</html>
